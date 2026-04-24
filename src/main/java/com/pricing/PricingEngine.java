@@ -1,55 +1,50 @@
 package com.pricing;
 
+import com.pricing.model.OrderItem;
+import com.pricing.model.PricingResult;
 import java.util.List;
 
-/**
- * BAD DESIGN STARTER CODE
- * This class has multiple issues: 
- * - Poor naming
- * - Single massive method (God Method)
- * - Hardcoded magic numbers (tax rates, discount percentages)
- * - Public fields for results (violates encapsulation)
- * - Mixed concerns (calculation + console output)
- * - No error handling
- */
 public class PricingEngine {
-    public double s; // subtotal
-    public double d; // discount
-    public double t; // tax
-    public double f; // final price
+    private static final double TAX_RATE = 0.20;
+    private static final double VIP_DISCOUNT_RATE = 0.15;
+    private static final double REGULAR_DISCOUNT_RATE = 0.05;
+    private static final double REGULAR_DISCOUNT_THRESHOLD = 100.0;
 
-    public void calc(List<Double> p, List<Integer> q, String typ, String cod) {
-        s = 0;
-        for (int i = 0; i < p.size(); i++) {
-            s += p.get(i) * q.get(i);
+    public PricingResult calculate(List<OrderItem> items, String customerType, String promoCode) {
+        double subtotal = calculateSubtotal(items);
+        double discount = calculateBaseDiscount(subtotal, customerType);
+        discount += applyPromoCode(promoCode);
+
+        double taxableAmount = subtotal - discount;
+        double tax = taxableAmount * TAX_RATE;
+        double finalPrice = taxableAmount + tax;
+
+        return new PricingResult(subtotal, discount, tax, finalPrice);
+    }
+
+    private double calculateSubtotal(List<OrderItem> items) {
+        return items.stream()
+                .mapToDouble(OrderItem::getSubtotal)
+                .sum();
+    }
+
+    private double calculateBaseDiscount(double subtotal, String customerType) {
+        if ("VIP".equalsIgnoreCase(customerType)) {
+            return subtotal * VIP_DISCOUNT_RATE;
+        } else if ("REGULAR".equalsIgnoreCase(customerType) && subtotal > REGULAR_DISCOUNT_THRESHOLD) {
+            return subtotal * REGULAR_DISCOUNT_RATE;
         }
-        
-        // VIP discount
-        if (typ.equals("VIP")) {
-            d = s * 0.15;
-        } else if (typ.equals("REGULAR")) {
-            if (s > 100) {
-                d = s * 0.05;
-            } else {
-                d = 0;
-            }
-        }
-        
-        // Promo codes
-        if (cod != null) {
-            if (cod.equals("SAVE10")) {
-                d += 10;
-            } else if (cod.equals("SAVE20")) {
-                d += 20;
-            }
-        }
-        
-        t = (s - d) * 0.2;
-        f = s - d + t;
-        
-        System.out.println("Subtotal: " + s);
-        System.out.println("Discount: " + d);
-        System.out.println("Tax: " + t);
-        System.out.println("Final: " + f);
+        return 0;
+    }
+
+    private double applyPromoCode(String promoCode) {
+        if (promoCode == null)
+            return 0;
+
+        return switch (promoCode.toUpperCase()) {
+            case "SAVE10" -> 10.0;
+            case "SAVE20" -> 20.0;
+            default -> 0;
+        };
     }
 }
