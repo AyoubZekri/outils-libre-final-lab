@@ -24,7 +24,7 @@ public class PricingApp {
         PricingEngine engine = new PricingEngine();
         PricingResult result = engine.calculate(items, customerType, promoCode);
 
-        // Print results in a machine-readable format (JSON-like or key-value)
+        // Print results 
         System.out.println("subtotal=" + result.getSubtotal());
         System.out.println("discount=" + result.getDiscountAmount());
         System.out.println("tax=" + result.getTaxAmount());
